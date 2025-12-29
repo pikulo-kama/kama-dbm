@@ -25,7 +25,7 @@ class DataExtractor:
     def do_extract(self, context: CommandContext):
         pass
 
-    def _post_extract(self, data: Any):
+    def _post_extract(self, data: Any, context: CommandContext):
         pass
 
 
@@ -75,7 +75,7 @@ class RegularExtractor(DataExtractor):
                 "type": args.type,
                 "extract_date": datetime.now().isoformat()
             },
-            "data": self._post_extract(formatted_data)
+            "data": self._post_extract(formatted_data, context)
         }
 
         if args.filter:
@@ -83,7 +83,7 @@ class RegularExtractor(DataExtractor):
 
         save_file(str(extract_file_path), content, as_json=True)
 
-    def _post_extract(self, data: Any):
+    def _post_extract(self, data: Any, context: CommandContext):
         """
         Allows to process retrieved table
         data and change data structure if

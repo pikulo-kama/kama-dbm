@@ -95,7 +95,7 @@ class DataImporter:
     def do_import(self, context: CommandContext):
         pass
 
-    def _format_data(self, data: Any, metadata: dict):
+    def _format_data(self, data: Any, metadata: dict, context: CommandContext):
         pass
 
 
@@ -128,7 +128,7 @@ class RegularImporter(DataImporter):
         table_name = metadata.get("table_name")
         filter_string = metadata.get("filter")
         data: list[dict] = import_file.get("data", [])
-        data = self._format_data(data, metadata)
+        data = self._format_data(data, metadata, context)
 
         _logger.info("Importing %s.", args.file_path)
         _logger.info("Importer: %s", metadata.get("type"))
@@ -156,7 +156,7 @@ class RegularImporter(DataImporter):
 
         import_table.save()
 
-    def _format_data(self, data: Any, metadata: dict):
+    def _format_data(self, data: Any, metadata: dict, context: CommandContext):
         """
         Allows to format JSON data before
         persisting it in database.
