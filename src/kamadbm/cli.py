@@ -23,10 +23,12 @@ class DatabaseCLI(metaclass=SingletonMeta):
         self.add_extractor(RegularExtractor())
 
     def get_importer(self, name: str):
-        return self.__importers.get(name) or self.Regular
+        importer = self.__importers.get(name)
+        return importer or self.__importers.get(self.Regular)
 
     def get_extractor(self, name: str):
-        return self.__extractors.get(name) or self.Regular
+        extractor = self.__extractors.get(name)
+        return extractor or self.__extractors.get(self.Regular)
 
     def add_importer(self, importer: DataImporter):
         name = importer.__class__.__name__.replace("Importer", "")
@@ -192,3 +194,7 @@ class DatabaseCLI(metaclass=SingletonMeta):
 def main():
     cli = DatabaseCLI()
     cli.run()
+
+
+if __name__ == "__main__":
+    main()

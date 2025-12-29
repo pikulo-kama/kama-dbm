@@ -30,7 +30,7 @@ class ImportCommand(CLICommand):
         db = context.database
 
         # Handle scenario where import file name provided directly.
-        if args.file_path is not None:
+        if hasattr(args, "file_path"):
             self.__invoke_importer_for_file(args.file_path, context)
             return
 
