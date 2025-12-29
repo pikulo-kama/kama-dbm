@@ -1,3 +1,4 @@
+from importlib.metadata import entry_points
 import argparse
 import os
 import sys
@@ -41,6 +42,8 @@ class DatabaseCLI(metaclass=SingletonMeta):
         Command line tool
         that is used to perform database related operations.
         """
+
+        self.__discover_plugins()
 
         parser = argparse.ArgumentParser(
             description="Database Management Service for SaveGem.",
@@ -177,6 +180,13 @@ class DatabaseCLI(metaclass=SingletonMeta):
         )
 
         extract_parser.set_defaults(func=extract_command.execute)
+
+    @staticmethod
+    def __discover_plugins():
+        plugins = entry_points(group="kama_dbm.plugins")
+
+        for plugin in plugins:
+            plugin.load()
 
 
 def main():
