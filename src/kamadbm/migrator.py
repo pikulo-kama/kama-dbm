@@ -63,7 +63,8 @@ class MigrateCommand(CLICommand):
 
         for directory in migration_directories:
             for migration_file_name in os.listdir(directory):
-                migrations.append(os.path.join(directory, migration_file_name))
+                if migration_file_name.endswith(".sql"):
+                    migrations.append(os.path.join(directory, migration_file_name))
 
         migrations.sort(key=os.path.basename)
         last_migration_name = migrations[-1]
