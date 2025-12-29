@@ -1,0 +1,39 @@
+[project]
+name = "kama-dbm"
+version = "0.1.0"
+license = {file = "LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "kama-util @ git+https://github.com/pikulo-kama/kama-util.git",
+    "kama-db @ git+https://github.com/pikulo-kama/kama-db.git"
+]
+
+
+[project.scripts]
+# This creates a command 'savegem-db' that runs the main() function
+kama-dbm = "kamadbm.cli:main"
+
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[project.optional-dependencies]
+test = [
+    "pytest-cov >= 7.0.0, < 8.0.0"
+]
+
+
+[tool.coverage.run]
+source = ["kamadbm"]
+disable_warnings = ["module-not-measured"]
+
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "--cov=kamadbm --cov-report=term-missing"
