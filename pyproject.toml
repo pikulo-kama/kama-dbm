@@ -14,7 +14,7 @@ dependencies = [
 
 [project.scripts]
 # This creates a command 'savegem-db' that runs the main() function
-kama-dbm = "kamadbm.main"
+kama-dbm = "kamadbm.main:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
