@@ -194,7 +194,5 @@ class DatabaseCLI(metaclass=SingletonMeta):
 
     @staticmethod
     def __discover_plugins():
-        plugins = entry_points(group="kama_dbm.plugins")
-
-        for plugin in plugins:
+        for plugin in entry_points(group="kama_dbm.plugins"):
             plugin.load()
