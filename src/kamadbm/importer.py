@@ -56,8 +56,7 @@ class ImportCommand(CLICommand):
 
             # Create entry if it doesn't exist.
             if metadata.is_empty:
-                metadata.add_row()
-                metadata.set_first("file_name", line)
+                metadata.add(file_name=line).save()
 
             current_checksum = metadata.get_first("checksum")
             _logger.info("%s: current: %s, actual: %s", line, current_checksum, actual_checksum)

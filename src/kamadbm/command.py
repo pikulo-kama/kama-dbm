@@ -1,5 +1,6 @@
 import dataclasses
 import sys
+import os
 from typing import TYPE_CHECKING, Any
 
 from kdb.manager import DatabaseManager
@@ -33,7 +34,7 @@ class CLICommand:
 
         context = CommandContext(
             args=args,
-            database=DatabaseManager(args.database),
+            database=DatabaseManager(os.path.expandvars(args.database)),
             cli=self.__cli
         )
         self._execute_command(context)

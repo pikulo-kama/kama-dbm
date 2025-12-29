@@ -1,5 +1,6 @@
 import datetime
 import os
+from pathlib import Path
 
 from kdb.manager import DatabaseManager
 from kutil.file import read_file, remove_extension_from_path
@@ -20,9 +21,12 @@ class MigrateCommand(CLICommand):
     @staticmethod
     def __initialize(context: CommandContext):
         """
-        Used to create schema version table.
-        Table is used to keep track of what
-        migrations have been already executed.
+        Used to create schema version and import
+        data version tables.
+
+        Tables are used to keep track of what
+        migrations have been already executed and what data has been
+        imported.
         """
 
         context.database.execute("""
@@ -33,6 +37,13 @@ class MigrateCommand(CLICommand):
                 description VARCHAR,
                 date_applied VARCHAR,
                 success INTEGER
+            )
+        """)
+
+        context.database.execute("""            
+            CREATE TABLE IF NOT EXISTS import_data_version (
+                file_name   VARCHAR PRIMARY KEY,
+                checksum    VARCHAR
             )
         """)
 
@@ -47,9 +58,14 @@ class MigrateCommand(CLICommand):
         """
 
         db = context.database
-        migrations_directory = context.args.migrations_directory
-        migrations = os.listdir(migrations_directory)
+        migration_directories = context.cli.extra_migration_paths + context.args.migration_directories
+        migrations = []
 
+        for directory in migration_directories:
+            for migration_file_name in os.listdir(directory):
+                migrations.append(os.path.join(directory, migration_file_name))
+
+        migrations.sort(key=os.path.basename)
         last_migration_name = migrations[-1]
 
         _logger.info("Latest observed migration: %s.", last_migration_name)
@@ -57,14 +73,15 @@ class MigrateCommand(CLICommand):
             _logger.info("No migrations to perform. Exiting.")
             return
 
-        for file_name in migrations:
+        for file_path in migrations:
+            file_name = Path(file_path).name
 
             if cls.__migration_exists(db, file_name):
                 _logger.info("Migration %s has already been executed. Skipping.", file_name)
                 continue
 
             _logger.info("Applying migration %s.", file_name)
-            script = read_file(os.path.join(migrations_directory, file_name))
+            script = read_file(file_path)
             db.connection().executescript(script)
 
             cls.__update_schema_version(db, file_name)
@@ -96,7 +113,10 @@ class MigrateCommand(CLICommand):
         version = version.replace("v", "").replace("_", ".")
         description = description.replace("_", " ")
 
-        manager.execute(f"""
-            INSERT INTO schema_version (file_name, version, description, date_applied, success)
-            VALUES (?, ?, ?, ?, ?)
-        """, (migration_name, version, description, datetime.datetime.now(), 1))
+        manager.retrieve_table("schema_version").add(
+            file_name=migration_name,
+            version=version,
+            description=description,
+            date_applied=datetime.datetime.now(),
+            success=1
+        ).save()

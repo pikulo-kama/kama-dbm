@@ -18,9 +18,17 @@ class DatabaseCLI(metaclass=SingletonMeta):
     def __init__(self):
         self.__extractors: dict[str, DataExtractor] = {}
         self.__importers: dict[str, DataImporter] = {}
+        self.__migration_paths: list[str] = []
 
         self.add_importer(RegularImporter())
         self.add_extractor(RegularExtractor())
+
+    def add_migration_path(self, path: str):
+        self.__migration_paths.append(path)
+
+    @property
+    def extra_migration_paths(self):
+        return self.__migration_paths
 
     def get_importer(self, name: str):
         importer = self.__importers.get(name)
@@ -88,8 +96,9 @@ class DatabaseCLI(metaclass=SingletonMeta):
         )
 
         migrate_parser.add_argument(
-            "--migrations_directory",
+            "--migration_directories",
             required=True,
+            nargs="+",
             type=str,
             help="Path to directory containing SQL migrations."
         )
