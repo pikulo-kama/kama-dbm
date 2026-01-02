@@ -17,7 +17,7 @@ dependencies = [
 kama-dbm = "kamadbm.main:main"
 
 [project.entry-points."pyinstaller40"]
-hook_names = "kamadbm._pyinstaller_hooks:get_hook_dirs"
+hook-dirs = "kamadbm._pyinstaller_hooks:get_hook_dirs"
 
 [build-system]
 requires = ["setuptools>=61.0"]
