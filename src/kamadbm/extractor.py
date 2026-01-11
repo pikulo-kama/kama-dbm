@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from kutil.file import save_file
-from kutil.file_extension import JSON
+from kutil.file_type import JSON
 from kutil.logger import get_logger
 from kamadbm.command import CLICommand, CommandContext
 
