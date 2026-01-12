@@ -20,6 +20,7 @@ class DatabaseCLI(metaclass=SingletonMeta):
         self.__importers: dict[str, DataImporter] = {}
         self.__migration_paths: list[str] = []
 
+    def post_init(self):
         self.add_importer(RegularImporter())
         self.add_extractor(RegularExtractor())
 

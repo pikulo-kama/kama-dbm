@@ -56,18 +56,9 @@ class RegularExtractor(DataExtractor):
             _logger.info("Filter: %s", args.filter)
             table.where(args.filter)
 
-        table_json = [row.to_json() for row in table.retrieve()]
-
-        extract_file_path = Path(str(os.path.join(args.output, JSON.add_to(table_name))))
+        table_data = [row.to_json(include_nulls=False) for row in table.retrieve()]
+        extract_file_path = Path(str(os.path.join(args.output, JSON.add_extension(table_name))))
         extract_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        formatted_data = copy.deepcopy(table_json)
-
-        # Remove NULL values.
-        for idx, record in enumerate(table_json):
-            for column_name, column_value in record.items():
-                if column_value is None:
-                    del formatted_data[idx][column_name]
 
         content = {
             "metadata": {
@@ -75,7 +66,7 @@ class RegularExtractor(DataExtractor):
                 "type": args.type,
                 "extract_date": datetime.now().isoformat()
             },
-            "data": self._post_extract(formatted_data, context)
+            "data": self._post_extract(table_data, context)
         }
 
         if args.filter:
