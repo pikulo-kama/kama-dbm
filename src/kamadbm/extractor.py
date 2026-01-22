@@ -1,4 +1,3 @@
-import copy
 import os
 from datetime import datetime
 from pathlib import Path
@@ -9,23 +8,59 @@ from kutil.file_type import JSON
 from kutil.logger import get_logger
 from kamadbm.command import CLICommand, CommandContext
 
-
 _logger = get_logger(__name__)
 
 
 class ExtractCommand(CLICommand):
+    """
+    CLI Command implementation for triggering the data extraction process.
+
+    This class acts as the entry point for the 'extract' action, delegating
+    the actual logic to the appropriate DataExtractor implementation.
+    """
 
     def _execute_command(self, context: CommandContext):
+        """
+        Executes the extraction process based on the provided context.
+
+        Args:
+            context (CommandContext): The context containing CLI arguments and
+                database connections.
+        """
+
         extractor = context.cli.get_extractor(context.args.type)
         extractor.do_extract(context)
 
 
 class DataExtractor:
+    """
+    Base class for all data extraction strategies.
 
-    def do_extract(self, context: CommandContext):
+    Defines the interface for extracting data from a source and performing
+    post-extraction processing.
+    """
+
+    def do_extract(self, context: CommandContext):  # pragma: no cover
+        """
+        Performs the main extraction logic.
+
+        Args:
+            context (CommandContext): The context containing environment and
+                execution parameters.
+        """
         pass
 
-    def _post_extract(self, data: Any, context: CommandContext):
+    def _post_extract(self, data: Any, context: CommandContext):  # pragma: no cover
+        """
+        Optional hook to transform or process data after it has been retrieved.
+
+        Args:
+            data (Any): The raw data retrieved from the source.
+            context (CommandContext): The execution context.
+
+        Returns:
+            Any: The processed data.
+        """
         pass
 
 
@@ -39,6 +74,14 @@ class RegularExtractor(DataExtractor):
     def do_extract(self, context: CommandContext):
         """
         Used to extract data from table.
+
+        Retrieves rows from the specified database table, applies optional
+        filters, wraps the data in metadata, and saves the result as a
+        JSON file.
+
+        Args:
+            context (CommandContext): The context containing database
+                connections and CLI arguments like table_name, filter, and output.
         """
 
         args = context.args
@@ -79,5 +122,14 @@ class RegularExtractor(DataExtractor):
         Allows to process retrieved table
         data and change data structure if
         needed.
+
+        In this implementation, it returns the data unchanged.
+
+        Args:
+            data (Any): The list of JSON-serialized rows.
+            context (CommandContext): The execution context.
+
+        Returns:
+            Any: The processed (unchanged) data.
         """
         return data

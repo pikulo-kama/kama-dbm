@@ -12,8 +12,23 @@ _logger = get_logger(__name__)
 
 
 class MigrateCommand(CLICommand):
+    """
+    Handles the evolution of the database schema.
+
+    This command manages the execution of SQL migration scripts and maintains
+    internal tracking tables to ensure each migration is applied exactly once.
+    """
 
     def _execute_command(self, context: CommandContext):
+        """
+        Orchestrates the database upgrade process.
+
+        * **Initializes** tracking tables if they don't exist.
+        * **Migrates** the database by applying pending scripts.
+
+        Args:
+            context: The command execution context.
+        """
         _logger.info("Starting database upgrade.")
         self.__initialize(context)
         self.__migrate(context)
@@ -21,12 +36,14 @@ class MigrateCommand(CLICommand):
     @staticmethod
     def __initialize(context: CommandContext):
         """
-        Used to create schema version and import
-        data version tables.
+        Used to create schema version and import data version tables.
 
-        Tables are used to keep track of what
-        migrations have been already executed and what data has been
-        imported.
+        Tables are used to keep track of:
+        * **Migrations:** What scripts have already been executed.
+        * **Import Data:** What data files have already been imported.
+
+        Args:
+            context: The command execution context.
         """
 
         context.database.execute("""
@@ -50,11 +67,17 @@ class MigrateCommand(CLICommand):
     @classmethod
     def __migrate(cls, context: CommandContext):
         """
-        Used to execute all migrations that haven't
-        been executed yet.
+        Used to execute all migrations that haven't been executed yet.
 
-        Will also update schema_version table for
-        all new migrations that have been executed.
+        The process performs the following:
+
+        * **Collection:** Gathers all .sql files from migration directories.
+        * **Sorting:** Orders migrations by basename to ensure correct sequence.
+        * **Validation:** Skips files that have already been applied.
+        * **Tracking:** Updates the schema_version table after each successful run.
+
+        Args:
+            context: The command execution context.
         """
 
         db = context.database
@@ -93,6 +116,13 @@ class MigrateCommand(CLICommand):
     def __migration_exists(cls, manager: DatabaseManager, migration_name: str):
         """
         Used to check whether migration with provided name already exists.
+
+        Args:
+            manager: The database manager to query.
+            migration_name: The name of the file to check.
+
+        Returns:
+            bool: True if the migration is found in the schema_version table.
         """
 
         cursor = manager.select("SELECT 1 FROM schema_version WHERE file_name = ?", (migration_name,))
@@ -102,6 +132,19 @@ class MigrateCommand(CLICommand):
     def __update_schema_version(cls, manager: DatabaseManager, migration_name: str):
         """
         Used to add migration to schema_version table.
+
+        Parses the migration filename using the following rules:
+
+        * **Separator:** Splits the filename by double underscores `__`.
+        * **Version:** Replaces `v` with empty string and `_` with `.`.
+        * **Description:** Replaces `_` with spaces.
+
+        Args:
+            manager: The database manager to update.
+            migration_name: The filename of the migration.
+
+        Raises:
+            RuntimeError: If the migration filename format is invalid.
         """
 
         migration_name = remove_extension_from_path(migration_name)

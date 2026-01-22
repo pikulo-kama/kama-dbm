@@ -12,18 +12,24 @@ _logger = get_logger(__name__)
 
 
 class ImportCommand(CLICommand):
+    """
+    Command implementation for importing data into the database.
+
+    This command supports two modes of operation:
+        1. Direct file import via the `file_path` argument.
+        2. Batch import via a `definition_file` containing a list of relative file paths.
+    """
 
     def _execute_command(self, context: CommandContext):
         """
-        Used to call database importer.
-        If definition file was provided will
-        read import all the files listed in it.
+        Orchestrates the import process based on the provided context arguments.
 
-        If file name provided directly will import
-        only that file.
+        If a definition file is used, it implements an idempotent check using SHA checksums
+        stored in the `import_data_version` table to skip unchanged files.
 
-        Will use import data metadata to decide
-        which importer implementation should be invoked.
+        Args:
+            context: The command execution context containing CLI arguments and
+                the active database connection.
         """
 
         args = context.args
@@ -65,7 +71,6 @@ class ImportCommand(CLICommand):
             if current_checksum != actual_checksum:
                 metadata.set_first("checksum", actual_checksum)
                 files_to_import.append(file_path)
-
             else:
                 _logger.info("Import file hasn't been changed. Skipping.")
 
@@ -78,7 +83,11 @@ class ImportCommand(CLICommand):
     @classmethod
     def __invoke_importer_for_file(cls, file_path: str, context: CommandContext):
         """
-        Used to invoke importer for provided import data file.
+        Reads the target file and delegates the import task to the appropriate DataImporter.
+
+        Args:
+            file_path: Absolute or relative path to the JSON data file.
+            context: The command execution context.
         """
 
         import_file = read_file(file_path, as_json=True)
@@ -90,28 +99,44 @@ class ImportCommand(CLICommand):
 
 
 class DataImporter:
+    """
+    Base class for all database importer implementations.
+    """
 
-    def do_import(self, context: CommandContext):
+    def do_import(self, context: CommandContext):  # pragma: no cover
+        """
+        Execute the import logic. Must be overridden by subclasses.
+        """
         pass
 
-    def _format_data(self, data: Any, metadata: dict, context: CommandContext):
+    def _format_data(self, data: Any, metadata: dict, context: CommandContext):  # pragma: no cover
+        """
+        Apply transformations to raw data before database insertion.
+        """
         pass
 
 
 class RegularImporter(DataImporter):
     """
-    Database importer.
-    Allows to import data from
-    JSON file to database table.
+    Standard database importer for flat JSON data.
 
-    Will remove all existing table data
-    when importing.
+    This importer maps JSON list entries directly to database table rows.
+    Note: This implementation performs a destructive import (truncates target table
+    or filtered subset) before inserting new data.
     """
 
     def do_import(self, context: CommandContext):
         """
-        Used to import data from JSON file
-        into database.
+        Imports data from a JSON file into the specified database table.
+
+        The method expects a JSON structure containing 'metadata' (table_name, type)
+        and 'data' (list of dictionaries).
+
+        Args:
+            context: The command execution context.
+
+        Raises:
+            SystemExit: If `file_path` is missing from the context arguments.
         """
 
         args = context.args
@@ -148,19 +173,20 @@ class RegularImporter(DataImporter):
         import_table.save()
 
         for record in data:
-            row_number = import_table.add_row()
-
-            for column_name, column_value in record.items():
-                import_table.set(row_number, column_name, column_value)
+            import_table.add(**record)
 
         import_table.save()
 
-    def _format_data(self, data: Any, metadata: dict, context: CommandContext):
+    def _format_data(self, data: Any, metadata: dict, context: CommandContext) -> list[dict]:
         """
-        Allows to format JSON data before
-        persisting it in database.
+        Ensures data is in a flat list-of-dicts format for database persistence.
 
-        Data should have a flat structure at the moment
-        when it's being inserted into database. (list[dict])
+        Args:
+            data: The raw data extracted from JSON.
+            metadata: Metadata associated with the import.
+            context: The execution context.
+
+        Returns:
+            The processed list of dictionaries ready for insertion.
         """
         return data

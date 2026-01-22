@@ -28,11 +28,13 @@ where = ["src"]
 
 [project.optional-dependencies]
 test = [
-    "pytest-cov >= 7.0.0, < 8.0.0"
+    "pytest-cov >= 7.0.0, < 8.0.0",
+    "pyinstaller >= 6.18.0, < 7.0.0"
 ]
 
 [tool.coverage.run]
 source = ["kamadbm"]
+omit = ["**/_pyinstaller_hooks/__init__.py"]
 disable_warnings = ["module-not-measured"]
 
 [tool.pytest.ini_options]
