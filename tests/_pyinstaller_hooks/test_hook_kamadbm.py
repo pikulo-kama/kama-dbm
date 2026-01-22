@@ -64,7 +64,7 @@ class TestKamaDBMHook:
     @pytest.mark.parametrize("platform, expected_dir, expected_exe", [
         ("win32", "Scripts", "kama-dbm.exe"),
         ("linux", "bin", "kama-dbm"),
-        ("darwin", "bin", "kama-dbm"),
+        ("darwin", "bin", "kama-dbm")
     ])
     def test_binary_path_detection(self, platform, expected_dir, expected_exe, mocker: MockerFixture, _load_module):
         """

@@ -128,7 +128,7 @@ class TestRegularExtractor:
             as_json=True
         )
 
-    def test_regular_extractor_applies_filter(self, _context, save_file_mock):
+    def test_regular_extractor_applies_filter(self, _context, save_file_mock, path_mock):
         """
         Tests that a filter argument correctly invokes table.where() and adds filter to metadata.
         """
@@ -144,7 +144,7 @@ class TestRegularExtractor:
         saved_content = save_file_mock.call_args[0][1]
         assert saved_content["metadata"]["filter"] == "column > 10"
 
-    def test_regular_extractor_calls_post_extract(self, mocker, _context, save_file_mock, db_table_mock):
+    def test_regular_extractor_calls_post_extract(self, mocker, _context, save_file_mock, db_table_mock, path_mock):
         """
         Tests that the _post_extract method is correctly called with processed data.
         """
