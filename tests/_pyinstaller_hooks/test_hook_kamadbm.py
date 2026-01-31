@@ -61,29 +61,6 @@ class TestKamaDBMHook:
 
         copy_metadata_mock.assert_called_with("kama-plugin-example")
 
-    @pytest.mark.parametrize("platform, expected_dir, expected_exe", [
-        ("win32", "Scripts", "kama-dbm.exe"),
-        ("linux", "bin", "kama-dbm"),
-        ("darwin", "bin", "kama-dbm")
-    ])
-    def test_binary_path_detection(self, platform, expected_dir, expected_exe, mocker: MockerFixture, _load_module):
-        """
-        Tests that the binary path is correctly constructed per OS.
-        """
-
-        mocker.patch("sys.platform", platform)
-        mocker.patch("sys.prefix", "/python")
-        mocker.patch("os.path.exists", return_value=True)
-
-        hook_module = _load_module()
-
-        # Logic from your hook
-        is_windows = platform == "win32"
-        scripts_dir = "Scripts" if is_windows else "bin"
-        exe_name = "kama-dbm.exe" if is_windows else "kama-dbm"
-
-        assert (os.path.join("/python", scripts_dir, exe_name), "bin") in hook_module.binaries
-
     def test_binary_only_added_if_exists(self, mocker: MockerFixture, _load_module):
         """
         Ensures binaries list is empty if the exe path doesn't exist.

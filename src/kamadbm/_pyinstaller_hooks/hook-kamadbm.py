@@ -1,5 +1,3 @@
-import os
-import sys
 import importlib.metadata
 
 from PyInstaller.utils.hooks import collect_entry_point, copy_metadata
@@ -27,13 +25,3 @@ for dist in importlib.metadata.distributions():
         hiddenimports.append(package_name)
         hiddenimports += collect_submodules(package_name)
         datas += collect_data_files(package_name)
-
-# Add kama-dbm CLI tool to binaries.
-is_windows = sys.platform == "win32"
-scripts_directory = "Scripts" if is_windows else "bin"
-exe_name = "kama-dbm.exe" if is_windows else "kama-dbm"
-
-exe_path = os.path.join(sys.prefix, scripts_directory, exe_name)
-
-if os.path.exists(exe_path):
-    binaries.append((exe_path, "bin"))
